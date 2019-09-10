@@ -789,6 +789,7 @@ public abstract class AbstractEpollStreamChannel extends AbstractEpollChannel im
                     }
                     allocHandle.incMessagesRead(1);
                     readPending = false;
+                    byteBuf.readerIndex(0);
                     pipeline.fireChannelRead(byteBuf);
                     byteBuf = null;
 

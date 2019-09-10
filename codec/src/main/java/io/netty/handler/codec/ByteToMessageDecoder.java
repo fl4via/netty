@@ -94,6 +94,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     buffer = cumulation;
                 }
                 buffer.writeBytes(in);
+                buffer.readerIndex(0);
                 return buffer;
             } finally {
                 // We must release in in all cases as otherwise it may produce a leak if writeBytes(...) throw
@@ -134,6 +135,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     in = null;
                     buffer = composite;
                 }
+                buffer.readerIndex(0);
                 return buffer;
             } finally {
                 if (in != null) {
