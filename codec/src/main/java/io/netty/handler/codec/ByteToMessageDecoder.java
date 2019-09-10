@@ -27,6 +27,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.ChannelInputShutdownEvent;
 import io.netty.util.internal.StringUtil;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -95,6 +96,8 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                 }
                 buffer.writeBytes(in);
                 buffer.readerIndex(0);
+                System.out.println(
+                        "This is reader index at ByteToMessageDecoder.MERGE_CUMULATOR: " + buffer.readerIndex());
                 return buffer;
             } finally {
                 // We must release in in all cases as otherwise it may produce a leak if writeBytes(...) throw
@@ -136,6 +139,8 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     buffer = composite;
                 }
                 buffer.readerIndex(0);
+                System.out.println(
+                        "This is reader index at ByteToMessageDecoder.COMPOSITE_CUMULATOR: " + buffer.readerIndex());
                 return buffer;
             } finally {
                 if (in != null) {
@@ -276,6 +281,8 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
             CodecOutputList out = CodecOutputList.newInstance();
             try {
                 ByteBuf data = (ByteBuf) msg;
+                System.out.println(
+                        "This is reader index at ByteToMessageDecoder.channelRead beginnning: " + data.readerIndex());
                 first = cumulation == null;
                 if (first) {
                     cumulation = data;
@@ -301,6 +308,15 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
 
                 int size = out.size();
                 firedChannelRead |= out.insertSinceRecycled();
+                Iterator<Object> iterator = out.iterator();
+                while (iterator.hasNext()) {
+                    Object outMsg = iterator.next();
+                    if (outMsg instanceof ByteBuf) {
+                        System.out.println(
+                                "This is reader index at ByteToMessageDecoder.channelRead end: "
+                                        + ((ByteBuf) outMsg).readerIndex());
+                    }
+                }
                 fireChannelRead(ctx, out, size);
                 out.recycle();
             }
@@ -317,6 +333,11 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
             fireChannelRead(ctx, (CodecOutputList) msgs, numElements);
         } else {
             for (int i = 0; i < numElements; i++) {
+                if (msgs.get(i) instanceof ByteBuf) {
+                    System.out.println(
+                            "This is reader index at ByteToMessageDecoder.fireChannelRead1: "
+                                    + ((ByteBuf) msgs.get(i)).readerIndex());
+                }
                 ctx.fireChannelRead(msgs.get(i));
             }
         }
@@ -327,6 +348,11 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      */
     static void fireChannelRead(ChannelHandlerContext ctx, CodecOutputList msgs, int numElements) {
         for (int i = 0; i < numElements; i ++) {
+            if (msgs.getUnsafe(i) instanceof ByteBuf) {
+                System.out.println(
+                        "This is reader index at ByteToMessageDecoder.fireChannelRead2: "
+                                + ((ByteBuf) msgs.getUnsafe(i)).readerIndex());
+            }
             ctx.fireChannelRead(msgs.getUnsafe(i));
         }
     }
@@ -428,6 +454,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                 int outSize = out.size();
 
                 if (outSize > 0) {
+                    System.out.println("This is reader index at ByteToMessageDecoder.callDecode: " + in.readerIndex());
                     fireChannelRead(ctx, out, outSize);
                     out.clear();
 

@@ -15,6 +15,7 @@
  */
 package io.netty.channel;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel.Unsafe;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.ResourceLeakDetector;
@@ -928,6 +929,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
+        if (msg instanceof ByteBuf) {
+            System.out.println(
+                    "This is reader index at DefaultChannelPipeline.fireChannelRead: "
+                            + ((ByteBuf) msg).readerIndex());
+        }
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1419,6 +1425,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            if (msg instanceof ByteBuf) {
+                System.out.println(
+                        "This is reader index at DefaultChannelPipeline$HeadContext.channelRead: "
+                                + ((ByteBuf) msg).readerIndex());
+            }
             ctx.fireChannelRead(msg);
         }
 

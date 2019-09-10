@@ -15,6 +15,7 @@
  */
 package io.netty.channel;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -349,6 +350,10 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     @Override
     public ChannelHandlerContext fireChannelRead(final Object msg) {
+        if (msg instanceof ByteBuf) {
+            System.out.println("This is reader index at AbstractChannelHandlerContext.fireChannelRead: "
+                            + ((ByteBuf) msg).readerIndex());
+        }
         invokeChannelRead(findContextInbound(MASK_CHANNEL_READ), msg);
         return this;
     }
@@ -357,6 +362,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            if (m instanceof ByteBuf) {
+                System.out.println(
+                        "This is reader index at AbstractChannelHandlerContext.invokeChannelRead: "
+                                + ((ByteBuf) m).readerIndex());
+            }
             next.invokeChannelRead(m);
         } else {
             executor.execute(new Runnable() {
